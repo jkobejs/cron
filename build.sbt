@@ -1,5 +1,3 @@
-ThisBuild / organization     := "io.github.jkobejs"
-ThisBuild / organizationName := "jkobejs"
 ThisBuild / scalaVersion     := "2.13.8"
 
 lazy val root = (project in file("."))
@@ -37,7 +35,7 @@ lazy val zio2 = (project in file("zio2")).settings(
 
 inThisBuild(
   List(
-    organization := "com.github.sbt",
+    organization := "io.github.jkobejs",
     homepage     := Some(url("https://github.com/jkobejs/cron")),
     licenses     := List("MIT" -> url("https://github.com/jkobejs/cron/LICENSE")),
     developers := List(

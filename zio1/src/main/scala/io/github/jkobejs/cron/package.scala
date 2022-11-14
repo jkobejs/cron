@@ -39,11 +39,11 @@ package object cron {
     zoneId: ZoneId = ZoneId.systemDefault()
   ): ZIO[R with Clock, E, Long] = {
     val getSleepFor: ZIO[Clock, Nothing, Option[Duration]] = for {
-      currentTime <- zio.clock.localDateTime.orDie
+      currentTime <- zio.clock.localDateTime.map(_.atZone(ZoneId.systemDefault())).orDie
     } yield optionalToOption(
       ExecutionTime
         .forCron(expression)
-        .timeToNextExecution(currentTime.atZone(zoneId))
+        .timeToNextExecution(currentTime.withZoneSameInstant(zoneId))
     )
 
     for {

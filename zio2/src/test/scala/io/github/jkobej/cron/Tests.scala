@@ -62,6 +62,32 @@ object Tests extends ZIOSpecDefault {
         _      <- TestClock.adjust(Duration.ofSeconds(1))
         either <- fork.join
       } yield assert(either)(Assertion.isLeft(Assertion.equalTo(error)))
+    },
+    test("runs at specific time within timezone") {
+      val cron = CronBuilder
+        .cron(CronDefinitionBuilder.instanceDefinitionFor(CronType.QUARTZ))
+        .withSecond(FieldExpressionFactory.on(0))
+        .withMinute(FieldExpressionFactory.on(5))
+        .withHour(FieldExpressionFactory.on(5))
+        .withDoM(FieldExpressionFactory.on(7))
+        .withDoW(FieldExpressionFactory.questionMark())
+        .withMonth(FieldExpressionFactory.always())
+        .withYear(FieldExpressionFactory.on(2022))
+        .instance()
+
+      for {
+        datesRef <- Ref.make[List[LocalDateTime]](Nil)
+        eff = for {
+          date <- zio.Clock.localDateTime
+          _    <- datesRef.update(dates => date :: dates)
+        } yield ()
+        _     <- TestClock.setTime(startInstant)
+        _     <- TestClock.setTimeZone(ZoneId.systemDefault())
+        fork  <- eff.repeatWithCron(cron, ZoneId.of("Europe/London")).fork
+        _     <- TestClock.adjust(Duration.ofDays(1)).repeatN(days)
+        runs  <- fork.join
+        dates <- datesRef.get
+      } yield assertTrue(runs == 12L) && assertTrue(dates.toSet == (1 to 12).map(dateTime.withMonth).toSet)
     }
   )
 }
